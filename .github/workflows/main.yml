@@ -1,0 +1,43 @@
+name: Build macOS App
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: macos-latest # 使用 GitHub 提供的最新 Mac 环境
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10" # 建议用 3.10 或 3.11
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Build with PyInstaller
+      run: |
+        pyinstaller main.spec
+
+    # 这一步尝试进行“自签名”，虽然不能完全解决安全警告，但比完全不签名好
+    - name: Ad-hoc Sign App
+      run: |
+        codesign --force --deep --sign - dist/VoiceChanger.app
+
+    - name: Create DMG (Optional but recommended)
+      run: |
+        npm install -g create-dmg
+        create-dmg dist/VoiceChanger.app dist || true
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: VoiceChanger-Mac
+        path: dist/*.dmg # 或者 dist/*.app
