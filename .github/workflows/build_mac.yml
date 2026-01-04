@@ -1,30 +1,36 @@
-name: Build Mac App
+name: Build Mac App (Compatible)
 
-on: workflow_dispatch  # 允许手动点击按钮触发
+on: workflow_dispatch
 
 jobs:
   build:
-    runs-on: macos-latest  # 使用最新的 Mac 系统
+    # 强制使用 macOS 13 (Intel)，确保所有 Mac 都能运行
+    runs-on: macos-13
 
     steps:
-    - name: 下载代码
+    - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: 安装 Python
+    - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
 
-    - name: 安装依赖库
+    - name: Install dependencies
       run: |
         pip install -r requirement.txt
 
-    - name: 开始打包
+    - name: Build with PyInstaller
       run: |
         python build.py
 
-    - name: 上传结果
+    # 自动给文件加可执行权限 (在打包前先修好)
+    - name: Fix Permissions
+      run: |
+        chmod +x dist/VoiceChanger/VoiceChanger
+
+    - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Mac版变声器
-        path: dist/
+        name: Mac变声器(文件夹版)
+        path: dist/VoiceChanger/  # 上传整个文件夹
