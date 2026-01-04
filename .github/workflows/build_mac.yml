@@ -1,11 +1,11 @@
-name: Build Mac App (Compatible)
+name: Build Mac App (M1/M2/M3)
 
 on: workflow_dispatch
 
 jobs:
   build:
-    # 强制使用 macOS 13 (Intel)，确保所有 Mac 都能运行
-    runs-on: macos-13
+    # 关键修改：切换到 macos-latest (目前是 macOS 14/15 ARM64)
+    runs-on: macos-latest
 
     steps:
     - name: Checkout code
@@ -18,19 +18,21 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install -r requirement.txt
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        if [ -f requirement.txt ]; then pip install -r requirement.txt; fi
 
     - name: Build with PyInstaller
       run: |
         python build.py
 
-    # 自动给文件加可执行权限 (在打包前先修好)
+    # 修复权限
     - name: Fix Permissions
       run: |
-        chmod +x dist/VoiceChanger/VoiceChanger
+        # 尝试修复文件夹内的可执行文件权限
+        find dist -name "VoiceChanger" -exec chmod +x {} \;
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Mac变声器(文件夹版)
-        path: dist/VoiceChanger/  # 上传整个文件夹
+        name: Mac变声器(AppleSilicon版)
+        path: dist/VoiceChanger/
